@@ -3,11 +3,15 @@ from urllib.parse import urlencode
 import requests as rq
 import secrets
 from loguru import logger
+from rich.progress import track
 
 access_token = spotify_token.get_access_token()
 
 
 def get_track_id(all_tracks):
+    '''
+    Collect tracks ids
+    '''
     uris = []
     headers = {
         'Authorization': f'Bearer {access_token}'
@@ -15,11 +19,11 @@ def get_track_id(all_tracks):
     endpoint = 'https://api.spotify.com/v1/search'
     finded = 0
     exceptions = []
-    for track in all_tracks:
+    for track_info in track(all_tracks, description='[green] GET SPOTIFY IDs', style='yellow'):
         try:
-            full_name = f'{track["name"]} {" ".join(track["artist"])}'
+            full_name = f'{track_info["name"]} {" ".join(track_info["artist"])}'
             logger.info(f'YA-NAME: {full_name}')
-            data = urlencode({'q': f'{track["name"]} {" ".join(track["artist"])}', 'type': 'track'})
+            data = urlencode({'q': f'{track_info["name"]} {" ".join(track_info["artist"])}', 'type': 'track'})
             lookup_url = f'{endpoint}?{data}'
             r = rq.get(lookup_url, headers=headers)
             logger.info(f'STATUS CODE - {r.status_code}')
@@ -32,14 +36,20 @@ def get_track_id(all_tracks):
             uris.append(uri.split(':')[-1])
             finded += 1
         except Exception:
-            logger.exception(f'EXCEPT {track}')
-            exceptions.append(track)
+            logger.exception(f'EXCEPT {track_info}')
+            exceptions.append(track_info)
     logger.info(f'FINDED - {finded}')
     logger.info(f'EXCEPTIONS - {len(exceptions)} ({exceptions})')
+    # Print short report
+    print(f'FINDED - {finded}/{len(all_tracks)}')
+    print(f'EXCEPTIONS - {len(exceptions)} ({exceptions})')
     return uris
 
 
 def save_tracks(uris):
+    '''
+    Save tracks in spotify account
+    '''
     logger.info(f'TOTAL TRACKS: {len(uris)}')
     count = len(uris) / 50
     if count % 1 != 0:
@@ -47,9 +57,8 @@ def save_tracks(uris):
     else:
         count = int(count)
     start_position = 0
-    access_token = secrets.token_for_add
     headers = {
-        'Authorization': f'Bearer {access_token}',
+        'Authorization': f'Bearer {secrets.token_for_add}',
         'Content-Type': 'application/json'
     }
     endpoint = 'https://api.spotify.com/v1/me/tracks'

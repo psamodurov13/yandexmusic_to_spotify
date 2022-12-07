@@ -19,8 +19,10 @@ proxies = {
 
 
 def start():
+    # Create session and get page with favourites tracks at YandexMusic
     s = rq.Session()
     response = s.get('https://music.yandex.ru/users/psamodurov13/playlists/3', headers=headers, proxies=proxies)
+    # Get ids of tracks
     match = re.search(r'var Mu=({.+?});', response.text)
     if not match:
         logger.debug('Not found json')
@@ -31,7 +33,8 @@ def start():
     all_tracks = []
     collect = 0
     exceptions = []
-    for track_id in track(tracks_ids, description='[green] YA-MUSIC', style='green'):
+    # Iterate tracks and get names
+    for track_id in track(tracks_ids, description='[yellow] GET YA-MUSIC NAMES', style='yellow'):
         ids = track_id.split(':')
         track_resp = s.get(f'https://music.yandex.ru/handlers/track.jsx?track={ids[0]}%3A{ids[1]}&lang=ru'
                                f'&external-domain=music.yandex.ru&overembed=false&ncrnd=0.20545402969652227',
@@ -47,12 +50,15 @@ def start():
         except Exception:
             logger.exception(f'EXCEPT')
             exceptions.append(track_id)
-
     logger.info('COLLECT TRACKS FROM YANDEX MUSIC IS DONE')
     logger.info(f'COLLECTED - {collect}')
     logger.info(f'EXCEPTIONS - {len(exceptions)} ({exceptions})')
+    # Save tracks information in pickle file
     with open('ya_music_tracks.pickle', 'wb') as file:
         pickle.dump(all_tracks, file)
+    # Print short report
+    print(f'COLLECTED - {collect}/{len(tracks_ids)}')
+    print(f'EXCEPTIONS - {len(exceptions)} ({exceptions})')
     return all_tracks
 
 
