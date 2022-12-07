@@ -5,6 +5,7 @@ import re
 import json
 from rich.progress import track
 import pickle
+import secrets
 
 
 headers = {
@@ -21,7 +22,7 @@ proxies = {
 def start():
     # Create session and get page with favourites tracks at YandexMusic
     s = rq.Session()
-    response = s.get('https://music.yandex.ru/users/psamodurov13/playlists/3', headers=headers, proxies=proxies)
+    response = s.get(f'https://music.yandex.ru/users/{secrets.ya_login}/playlists/3', headers=headers, proxies=proxies)
     # Get ids of tracks
     match = re.search(r'var Mu=({.+?});', response.text)
     if not match:

@@ -76,6 +76,7 @@ def save_tracks(uris):
             logger.info(r.status_code)
             logger.info(r.json())
         start_position += 50
+    print(f'ADDED TO SPOTIFY - {len(uris)}')
 
 
 if __name__ == '__main__':
